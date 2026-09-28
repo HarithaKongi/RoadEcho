@@ -2,10 +2,6 @@
 
 > **A memory-driven arcade racing game where your own past becomes your opponent.**
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-00C7B7?style=for-the-badge)](#)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=for-the-badge\&logo=javascript)](#)
-[![HTML5 Canvas](https://img.shields.io/badge/HTML5-Canvas-orange?style=for-the-badge\&logo=html5)](#)
-[![Responsive](https://img.shields.io/badge/UI-Responsive-blue?style=for-the-badge)](#)
 
 ---
 
