@@ -75,7 +75,9 @@ addEventListener('keyup',e=>{
 
 function spawn(){
   const lanes=[-.62,-.31,0,.31,.62];
-  traffic.push({x:lanes[Math.floor(Math.random()*lanes.length)],z:1.1});
+  const types=['sedan','suv','sports'];
+  const colors=['#e7edf5','#ff4057','#ffc857','#7aa7ff','#8ee7d1'];
+  traffic.push({x:lanes[Math.floor(Math.random()*lanes.length)],z:1.1,type:types[Math.floor(Math.random()*types.length)],color:colors[Math.floor(Math.random()*colors.length)]});
 }
 function update(dt){
   if(!playing)return;
@@ -110,12 +112,85 @@ function update(dt){
 }
 function roadX(x,z){return w/2+x*w*.38/(1+z*.72)}
 function roadY(z){return h*.31+(1/(1+z*.72))*h*.56}
-function drawCar(x,y,s,color,tilt=0){
-  ctx.save();ctx.translate(x,y);ctx.rotate(tilt);ctx.scale(s,s);
-  ctx.fillStyle=color;ctx.shadowBlur=20;ctx.shadowColor=color;
-  ctx.beginPath();ctx.roundRect(-22,-42,44,66,9);ctx.fill();
-  ctx.shadowBlur=0;ctx.fillStyle='#071321';ctx.fillRect(-15,-29,30,20);
-  ctx.fillStyle='#dffcff';ctx.fillRect(-17,12,7,4);ctx.fillRect(10,12,7,4);
+function drawCar(x,y,s,color,tilt=0,type='sports'){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(tilt);
+  ctx.scale(s,s);
+
+  // Real-world inspired vehicle silhouettes: sports car, sedan, and SUV.
+  const bodyH=type==='suv'?72:type==='sedan'?68:64;
+  const bodyW=type==='suv'?48:type==='sedan'?46:44;
+
+  ctx.shadowBlur=18;
+  ctx.shadowColor=color;
+  ctx.fillStyle=color;
+  ctx.beginPath();
+
+  if(type==='suv'){
+    ctx.roundRect(-bodyW/2,-bodyH/2,bodyW,bodyH,7);
+    ctx.fill();
+    ctx.fillStyle='#18283b';
+    ctx.fillRect(-18,-24,36,23);
+    ctx.fillStyle='#24384c';
+    ctx.fillRect(-19,2,38,15);
+  }else if(type==='sedan'){
+    ctx.moveTo(-20,30);
+    ctx.lineTo(-22,4);
+    ctx.quadraticCurveTo(-20,-9,-14,-25);
+    ctx.quadraticCurveTo(0,-35,14,-25);
+    ctx.quadraticCurveTo(20,-9,22,4);
+    ctx.lineTo(20,30);
+    ctx.quadraticCurveTo(0,36,-20,30);
+    ctx.fill();
+    ctx.fillStyle='#18283b';
+    ctx.beginPath();
+    ctx.moveTo(-14,-7);ctx.lineTo(-10,-23);ctx.quadraticCurveTo(0,-29,10,-23);ctx.lineTo(14,-7);ctx.closePath();ctx.fill();
+  }else{
+    ctx.moveTo(-21,29);
+    ctx.lineTo(-23,4);
+    ctx.quadraticCurveTo(-20,-8,-13,-24);
+    ctx.quadraticCurveTo(0,-31,13,-24);
+    ctx.quadraticCurveTo(20,-8,23,4);
+    ctx.lineTo(21,29);
+    ctx.quadraticCurveTo(0,35,-21,29);
+    ctx.fill();
+    ctx.fillStyle='#15263a';
+    ctx.beginPath();
+    ctx.moveTo(-13,-8);ctx.lineTo(-9,-24);ctx.quadraticCurveTo(0,-28,9,-24);ctx.lineTo(13,-8);ctx.closePath();ctx.fill();
+  }
+
+  ctx.shadowBlur=0;
+
+  // Windows
+  ctx.fillStyle='#071321';
+  if(type==='suv'){
+    ctx.fillRect(-17,-22,34,20);
+  }else{
+    ctx.beginPath();
+    ctx.roundRect(-14,-21,28,16,4);
+    ctx.fill();
+  }
+
+  // Wheels / tires
+  ctx.fillStyle='#05070b';
+  ctx.fillRect(-bodyW/2-3,-17,6,18);
+  ctx.fillRect(bodyW/2-3,-17,6,18);
+  ctx.fillRect(-bodyW/2-3,12,6,18);
+  ctx.fillRect(bodyW/2-3,12,6,18);
+
+  // Headlights and rear lights
+  ctx.fillStyle='#eaffff';
+  ctx.fillRect(-16,20,8,4);
+  ctx.fillRect(8,20,8,4);
+  ctx.fillStyle='#ff334f';
+  ctx.fillRect(-17,-27,7,3);
+  ctx.fillRect(10,-27,7,3);
+
+  // Front grille
+  ctx.fillStyle='#050b13';
+  ctx.fillRect(-10,27,20,3);
+
   ctx.restore();
 }
 function draw(){
@@ -142,10 +217,10 @@ function draw(){
   }
   for(const o of traffic){
     const x=roadX(o.x,o.z),y=roadY(o.z),s=.55+1/(1+o.z);
-    drawCar(x,y,s,'#d9e1ee');
+    drawCar(x,y,s,o.color,0,o.type);
   }
   const playerX=roadX(carX,.03);
-  drawCar(playerX,h*.82+carBounce,1.22,'#45f4ff',carTilt);
+  drawCar(playerX,h*.82+carBounce,1.22,'#45f4ff',carTilt,'sports');
   if(Math.abs(steer)>.05){
     ctx.save();ctx.globalAlpha=Math.min(.65,Math.abs(steer));ctx.strokeStyle='#45f4ff';ctx.lineWidth=3;
     ctx.beginPath();ctx.moveTo(playerX-34,h*.88);ctx.lineTo(playerX-70-steer*18,h*.88+10);ctx.moveTo(playerX+34,h*.88);ctx.lineTo(playerX+70-steer*18,h*.88+10);ctx.stroke();ctx.restore();
