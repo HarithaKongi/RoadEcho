@@ -1,5 +1,18 @@
 import * as THREE from 'three';
+import {loadCarModel,fallbackCar} from './VehicleModel.js';
 export class PlayerCar{
-constructor(scene,spec){this.group=new THREE.Group();this.spec=spec;this.wheels=[];this.build(false);scene.add(this.group)}
-build(ghost){const c=new THREE.Color(this.spec.color);const body=new THREE.Mesh(new THREE.BoxGeometry(2.05,.55,4.2),new THREE.MeshStandardMaterial({color:c,metalness:.65,roughness:.24}));body.position.y=.72;this.group.add(body);const roof=new THREE.Mesh(new THREE.BoxGeometry(1.48,.48,1.65),new THREE.MeshStandardMaterial({color:0x14263a,metalness:.15,roughness:.15,transparent:true,opacity:.82}));roof.position.set(0,1.08,-.05);this.group.add(roof);for(const x of[-.94,.94])for(const z of[-1.38,1.38]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.36,.36,.22,16),new THREE.MeshStandardMaterial({color:0x080a0e,roughness:.8}));w.rotation.z=Math.PI/2;w.position.set(x,.43,z);this.group.add(w);this.wheels.push(w)}const lightMat=new THREE.MeshStandardMaterial({color:0xdfffff,emissive:0x8fefff,emissiveIntensity:2});for(const x of[-.62,.62]){const l=new THREE.Mesh(new THREE.BoxGeometry(.38,.1,.08),lightMat);l.position.set(x,.78,2.12);this.group.add(l)}const red=new THREE.MeshStandardMaterial({color:0xff163d,emissive:0xff163d,emissiveIntensity:1});for(const x of[-.65,.65]){const l=new THREE.Mesh(new THREE.BoxGeometry(.42,.1,.08),red);l.position.set(x,.78,-2.12);this.group.add(l)}}
-update(physics,dt){this.group.position.x=physics.x*2.15;this.group.rotation.y=physics.heading;this.group.position.y=.18+Math.sin(performance.now()*.012)*.012;for(const w of this.wheels)w.rotation.x-=physics.speed*dt*.045}}
+constructor(scene,spec){this.scene=scene;this.group=new THREE.Group();this.spec=spec;this.wheels=[];this.frontWheels=[];this.visualSpeed=0;this.modelReady=false;this.build();scene.add(this.group);this.load()}
+build(){this.model=fallbackCar(this.spec.color);this.group.add(this.model);this.group.position.y=.18}
+async load(){const model=await loadCarModel();if(!model||!this.group.parent)return;this.group.remove(this.model);this.model=model;this.group.add(model);this.modelReady=true;this.group.scale.setScalar(1.0);this.findWheels()}
+findWheels(){this.wheels=[];this.frontWheels=[];this.model.traverse(o=>{if(o.isMesh&&/wheel|tire|tyre/i.test(o.name))this.wheels.push(o);});this.frontWheels=this.wheels.slice(0,2)}
+update(p,dt){
+  const target=p.speed;this.visualSpeed+=(target-this.visualSpeed)*Math.min(1,dt*7);
+  this.group.position.x=p.x*2.15;
+  this.group.position.y=.18+p.suspension;
+  this.group.rotation.y=p.heading;
+  this.group.rotation.z=p.bodyRoll;
+  this.group.rotation.x=p.bodyPitch;
+  for(const w of this.wheels)w.rotation.x-=this.visualSpeed*dt*.012;
+  for(const w of this.frontWheels)w.rotation.y=p.steerAngle*.45;
+}
+}
