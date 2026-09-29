@@ -47,7 +47,7 @@ h2,h3{margin-top:0}
   <div class="sub">A MEMORY-DRIVEN ARCADE EXPERIENCE</div>
   <div class="logo">ROAD<br>ECHO</div>
   <div class="tag">The highway remembers what you did.<br>Then it makes you drive against it.</div>
-  <button class="btn primary" id="playBtn">ENTER THE ECHO</button>
+  <button type="button" class="btn primary" id="playBtn">ENTER THE ECHO</button>
   <button class="btn" id="helpBtn">HOW IT WORKS</button>
   <div class="card" style="margin-top:14px"><div class="row"><span>BEST MEMORY</span><b class="k" id="bestMenu">0</b></div><div class="small">Your previous route becomes an Echo on the next run.</div></div>
 </section>
@@ -58,7 +58,7 @@ h2,h3{margin-top:0}
     <p>Run 1 records your steering path.</p><p>After the first phase, your old route becomes a glowing <b>Echo car</b>.</p><p>The Echo repeats your past decisions, turning your own driving history into an opponent.</p><p>Later, memory gates and shards appear. Survive, collect shards and create a better route for your next run.</p>
     <h3 style="color:var(--pink)">CONTROLS</h3><p>Keyboard: <b>← →</b> or <b>A D</b>. Space = phase shift. P = pause. M = audio.</p><p>Mobile: use the left/right buttons or drag on the road.</p>
   </div>
-  <button class="btn primary" id="helpPlayBtn">PLAY</button>
+  <button type="button" class="btn primary" id="helpPlayBtn">PLAY</button>
 </section>
 <section id="hud" class="screen">
   <div class="row"><div class="hbox">PHASE <b id="phase">01</b></div><div class="hbox">SCORE <b id="score">000000</b></div><div class="hbox">BEST <b id="bestHud">000000</b></div></div>
@@ -80,10 +80,10 @@ function setBestUI(){$('bestMenu').textContent=best;$('bestHud').textContent=Str
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on')}
 function menu(){mode='menu';objects=[];particles=[];route=[];echoRoute=[];show('menu')}
 function toast(msg){$('toast').textContent=msg;$('toast').style.opacity='1';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.opacity='0',900)}
-function initAudio(){if(!audioOn)return;if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.035;master.connect(audioCtx.destination)}if(audioCtx.state==='suspended')audioCtx.resume()}
+function initAudio(){if(!audioOn)return;try{if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audioCtx=new AC();master=audioCtx.createGain();master.gain.value=.035;master.connect(audioCtx.destination)}if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){audioCtx=null;master=null}}
 function beep(freq,dur=.07,type='sine'){if(!audioOn)return;initAudio();if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.001,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.25,audioCtx.currentTime+.01);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(g);g.connect(master);o.start();o.stop(audioCtx.currentTime+dur+.02)}
 function toggleAudio(){audioOn=!audioOn;localStorage.setItem('roadEchoAudio',audioOn?'on':'off');$('audioBtn').textContent=audioOn?'🔊':'🔇';if(audioOn){initAudio();beep(660,.08)}}
-function start(){initAudio();mode='play';show('hud');t=0;carX=0;targetX=0;speed=110;distance=0;score=0;shards=0;phase=1;objects=[];particles=[];route=[];echoRoute=[];routeClock=0;echoClock=0;phaseClock=0;roadScroll=0;inv=0;shake=0;toast('RECORDING YOUR FUTURE');beep(440,.08)}
+function start(){try{initAudio()}catch(e){}mode='play';show('hud');t=0;carX=0;targetX=0;speed=110;distance=0;score=0;shards=0;phase=1;objects=[];particles=[];route=[];echoRoute=[];routeClock=0;echoClock=0;phaseClock=0;roadScroll=0;inv=0;shake=0;toast('RECORDING YOUR FUTURE');beep(440,.08)}
 function pause(){if(mode==='play'){mode='pause';show('pause');beep(220,.08)}}
 function resume(){if(mode==='pause'){mode='play';show('hud');last=performance.now();beep(440,.08)}}
 function gameOver(){mode='over';show('over');const final=Math.floor(score);best=Math.max(best,final);localStorage.setItem('roadEchoBest',best);localStorage.setItem('roadEchoRoute',JSON.stringify(route.slice(-1200)));$('finalScore').textContent=final;$('finalShards').textContent=shards;$('finalDist').textContent=distance.toFixed(1)+' km';setBestUI();beep(110,.18,'sawtooth')}
@@ -112,7 +112,7 @@ function drawCar(x,y,s,color,ghost=false){ctx.save();ctx.translate(x,y);ctx.scal
 function drawObject(o){const p=1/(1+o.z*.06),x=roadX(o.x,o.z),y=roadY(o.z),s=.42+p*1.55;if(o.type==='shard'){ctx.save();ctx.translate(x,y-18*s);ctx.rotate(t*4);ctx.fillStyle='#ff4fa3';ctx.shadowBlur=20;ctx.shadowColor='#ff4fa3';ctx.beginPath();ctx.moveTo(0,-12*s);ctx.lineTo(9*s,0);ctx.lineTo(0,12*s);ctx.lineTo(-9*s,0);ctx.closePath();ctx.fill();ctx.restore()}else if(o.type==='gate'){ctx.save();ctx.strokeStyle='#9b5cff';ctx.shadowBlur=20;ctx.shadowColor='#9b5cff';ctx.lineWidth=5*s;ctx.strokeRect(x-30*s,y-78*s,60*s,78*s);ctx.restore()}else drawCar(x,y,s,o.type==='echo'?'#45f4ff':'#d9e1ee',o.type==='echo')}
 function draw(dt){ctx.save();ctx.clearRect(0,0,W,H);if(shake>0){ctx.translate((rand()-.5)*9,(rand()-.5)*9);shake=Math.max(0,shake-dt)}drawBackground();objects.slice().sort((a,b)=>b.z-a.z).forEach(drawObject);if(mode==='play'||mode==='pause'){const bob=Math.sin(t*18)*2.4,glow=inv>0?'#ff4fa3':'#45f4ff';drawCar(roadX(carX,.03),H*.82+bob,1.18,glow,false)}for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=330*dt;p.life-=dt;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle='#45f4ff';ctx.fillRect(p.x,p.y,3,3)}particles=particles.filter(p=>p.life>0);ctx.globalAlpha=1;ctx.restore()}
 function loop(now){const dt=Math.min(.035,Math.max(0,(now-last)/1000));last=now;update(dt);draw(dt);requestAnimationFrame(loop)}
-$('playBtn').onclick=start;$('helpPlayBtn').onclick=start;$('helpBtn').onclick=()=>show('help');$('backBtn').onclick=menu;$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;$('restartBtn').onclick=start;$('pauseMenuBtn').onclick=menu;$('againBtn').onclick=start;$('overMenuBtn').onclick=menu;$('audioBtn').onclick=toggleAudio;requestAnimationFrame(loop);
+$('playBtn').onclick=start;$('helpPlayBtn').onclick=start;$('helpBtn').onclick=()=>show('help');$('backBtn').onclick=menu;$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;$('restartBtn').onclick=start;$('pauseMenuBtn').onclick=menu;$('againBtn').onclick=start;$('overMenuBtn').onclick=menu;$('audioBtn').onclick=toggleAudio;document.addEventListener('click',e=>{if(e.target&&e.target.id==='playBtn')start();if(e.target&&e.target.id==='helpPlayBtn')start()});requestAnimationFrame(loop);
 </script>
 </body>
 </html>
