@@ -1,119 +1,16 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#050611">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050812">
 <title>ROAD ECHO — The Highway Remembers</title>
-<style>
-:root{--cyan:#45f4ff;--violet:#9b5cff;--pink:#ff4fa3;--bg:#050611}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
-body{display:grid;place-items:center}
-#app{position:relative;width:min(100vw,560px);height:100dvh;max-height:1000px;overflow:hidden;background:#04050d}
-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.screen{position:absolute;inset:0;z-index:5;display:none;padding:22px}
-.screen.on{display:flex;flex-direction:column}
-#menu{justify-content:center;text-align:center;background:radial-gradient(circle at 50% 32%,rgba(69,244,255,.13),transparent 35%),linear-gradient(180deg,transparent,rgba(3,4,12,.9))}
-.logo{font-weight:900;font-size:clamp(50px,14vw,82px);line-height:.8;letter-spacing:-5px;background:linear-gradient(#fff,var(--cyan),#6870ff);-webkit-background-clip:text;color:transparent;text-shadow:0 0 30px rgba(69,244,255,.4)}
-.sub{letter-spacing:4px;color:#9cb0d2;font-weight:700;font-size:12px}
-.tag{font-size:18px;line-height:1.4;color:#dceaff;max-width:400px;margin:18px auto 25px}
-.btn{border:1px solid rgba(69,244,255,.35);border-radius:14px;background:rgba(8,13,34,.86);color:#fff;padding:14px 18px;margin:6px 0;font-weight:800;font-size:16px;letter-spacing:1.5px;box-shadow:inset 0 1px rgba(255,255,255,.08),0 0 18px rgba(69,244,255,.08);cursor:pointer}
-.btn.primary{background:linear-gradient(100deg,#087d9a,#5841c9);border-color:#9ffaff}
-.btn:active{transform:scale(.97)}
-.card{background:rgba(8,12,31,.78);border:1px solid rgba(69,244,255,.2);border-radius:18px;padding:16px;backdrop-filter:blur(10px)}
-.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.small{font-size:12px;color:#8195b9;line-height:1.5}
-.k{font-size:25px;color:var(--cyan)}
-#hud{pointer-events:none;padding:10px}
-#hud .btn{pointer-events:auto}
-.hbox{background:rgba(4,8,24,.7);border:1px solid rgba(69,244,255,.2);border-radius:11px;padding:7px 10px;font-size:11px}
-.hbox b{font-size:16px;color:#fff}
-#echoBar{position:absolute;left:14px;right:14px;bottom:20px;height:7px;border-radius:9px;background:#ffffff12;overflow:hidden}
-#echoFill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet),var(--pink));box-shadow:0 0 14px var(--cyan)}
-#echoText{position:absolute;bottom:31px;left:14px;font-size:10px;letter-spacing:1.5px;color:#a8cfff}
-#toast{position:absolute;left:7%;right:7%;top:37%;text-align:center;font-weight:900;font-size:27px;letter-spacing:1px;text-shadow:0 0 22px var(--cyan);opacity:0;transition:.2s;z-index:20;pointer-events:none}
-#mobileControls{position:absolute;left:0;right:0;bottom:54px;z-index:8;display:none;justify-content:space-between;padding:0 18px;pointer-events:none}
-.touch{pointer-events:auto;width:74px;height:58px;border-radius:18px;border:1px solid #45f4ff66;background:#071027aa;color:#fff;font-size:25px;font-weight:900}
-.touch:active{background:#45f4ff33}
-@media(pointer:coarse){#mobileControls{display:flex}}
-h2,h3{margin-top:0}
-</style>
 </head>
 <body>
 <div id="app">
-<canvas id="game"></canvas>
-<section id="menu" class="screen on">
-  <div class="sub">A MEMORY-DRIVEN ARCADE EXPERIENCE</div>
-  <div class="logo">ROAD<br>ECHO</div>
-  <div class="tag">The highway remembers what you did.<br>Then it makes you drive against it.</div>
-  <a class="btn primary" href="https://harithakongi.github.io/RoadEcho/game.html?play=1" style="text-decoration:none;display:block;cursor:pointer">ENTER THE ECHO</a>
-  <button class="btn" id="helpBtn">HOW IT WORKS</button>
-  <div class="card" style="margin-top:14px"><div class="row"><span>BEST MEMORY</span><b class="k" id="bestMenu">0</b></div><div class="small">Your previous route becomes an Echo on the next run.</div></div>
-</section>
-<section id="help" class="screen">
-  <div class="row"><button class="btn" id="backBtn">←</button><h2>ROAD ECHO</h2><span></span></div>
-  <div class="card" style="line-height:1.45;color:#b8c7e5">
-    <h3 style="color:var(--cyan)">THE CORE IDEA</h3>
-    <p>Run 1 records your steering path.</p><p>After the first phase, your old route becomes a glowing <b>Echo car</b>.</p><p>The Echo repeats your past decisions, turning your own driving history into an opponent.</p><p>Later, memory gates and shards appear. Survive, collect shards and create a better route for your next run.</p>
-    <h3 style="color:var(--pink)">CONTROLS</h3><p>Keyboard: <b>← →</b> or <b>A D</b>. Space = phase shift. P = pause. M = audio.</p><p>Mobile: use the left/right buttons or drag on the road.</p>
-  </div>
-  <button type="button" class="btn primary" id="helpPlayBtn">PLAY</button>
-</section>
-<section id="hud" class="screen">
-  <div class="row"><div class="hbox">PHASE <b id="phase">01</b></div><div class="hbox">SCORE <b id="score">000000</b></div><div class="hbox">BEST <b id="bestHud">000000</b></div></div>
-  <div class="row" style="margin-top:7px"><div class="hbox">DIST <b id="dist">0.0</b> km</div><div class="hbox">SPEED <b id="speed">0</b></div><button class="btn" id="pauseBtn" style="padding:8px 13px;margin:0">Ⅱ</button><button class="btn" id="audioBtn" style="padding:8px 11px;margin:0">🔊</button></div>
-  <div id="echoText">MEMORY BUFFER: RECORDING</div><div id="echoBar"><div id="echoFill"></div></div>
-</section>
-<section id="pause" class="screen" style="justify-content:center;text-align:center;background:#02030bb8"><div class="card"><h2>PAUSED</h2><p class="small">Your memory is frozen.</p><button class="btn primary" id="resumeBtn">RESUME</button><button class="btn" id="restartBtn">RESTART</button><button class="btn" id="pauseMenuBtn">MAIN MENU</button></div></section>
-<section id="over" class="screen" style="justify-content:center"><div class="card"><h2 style="color:var(--pink)">RUN COMPLETE</h2><div class="row"><span>SCORE</span><b class="k" id="finalScore">0</b></div><div class="row"><span>ECHO SHARDS</span><b class="k" id="finalShards">0</b></div><div class="row"><span>DISTANCE</span><b class="k" id="finalDist">0.0 km</b></div><p class="small">Your route has been saved. On the next run, it becomes your Echo.</p><button class="btn primary" id="againBtn">RUN IT AGAIN</button><button class="btn" id="overMenuBtn">MAIN MENU</button></div></section>
-<div id="mobileControls"><button class="touch" id="leftBtn">◀</button><button class="touch" id="rightBtn">▶</button></div><div id="toast"></div>
+  <div id="game-root"></div>
+  <div id="ui"></div>
 </div>
-<script>
-'use strict';
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d',{alpha:false}),$=id=>document.getElementById(id),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=()=>Math.random();
-let W=0,H=0,dpr=1;
-function resize(){const r=canvas.getBoundingClientRect();dpr=Math.min(window.devicePixelRatio||1,2);W=Math.max(320,r.width);H=Math.max(480,r.height);canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)} addEventListener('resize',resize);resize();
-let mode='menu',t=0,last=performance.now(),carX=0,targetX=0,speed=110,distance=0,score=0,shards=0,phase=1,objects=[],particles=[],route=[],echoRoute=[],routeClock=0,echoClock=0,phaseClock=0,roadScroll=0,inv=0,shake=0;
-let best=0,audioOn=true,audioCtx=null,master=null;try{best=Number(localStorage.getItem('roadEchoBest')||0);audioOn=localStorage.getItem('roadEchoAudio')!=='off'}catch(e){}const keys={left:false,right:false};
-function setBestUI(){$('bestMenu').textContent=best;$('bestHud').textContent=String(best).padStart(6,'0')} setBestUI();$('audioBtn').textContent=audioOn?'🔊':'🔇';
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on')}
-function menu(){mode='menu';objects=[];particles=[];route=[];echoRoute=[];show('menu')}
-function toast(msg){$('toast').textContent=msg;$('toast').style.opacity='1';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.opacity='0',900)}
-function initAudio(){if(!audioOn)return;try{if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audioCtx=new AC();master=audioCtx.createGain();master.gain.value=.035;master.connect(audioCtx.destination)}if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){audioCtx=null;master=null}}
-function beep(freq,dur=.07,type='sine'){if(!audioOn)return;initAudio();if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.001,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.25,audioCtx.currentTime+.01);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(g);g.connect(master);o.start();o.stop(audioCtx.currentTime+dur+.02)}
-function toggleAudio(){audioOn=!audioOn;try{localStorage.setItem('roadEchoAudio',audioOn?'on':'off')}catch(e){}$('audioBtn').textContent=audioOn?'🔊':'🔇';if(audioOn){initAudio();beep(660,.08)}}
-function start(){try{initAudio()}catch(e){}mode='play';show('hud');t=0;carX=0;targetX=0;speed=110;distance=0;score=0;shards=0;phase=1;objects=[];particles=[];route=[];echoRoute=[];routeClock=0;echoClock=0;phaseClock=0;roadScroll=0;inv=0;shake=0;toast('RECORDING YOUR FUTURE');beep(440,.08)}
-function pause(){if(mode==='play'){mode='pause';show('pause');beep(220,.08)}}
-function resume(){if(mode==='pause'){mode='play';show('hud');last=performance.now();beep(440,.08)}}
-function gameOver(){mode='over';show('over');const final=Math.floor(score);best=Math.max(best,final);try{localStorage.setItem('roadEchoBest',best);localStorage.setItem('roadEchoRoute',JSON.stringify(route.slice(-1200)))}catch(e){}$('finalScore').textContent=final;$('finalShards').textContent=shards;$('finalDist').textContent=distance.toFixed(1)+' km';setBestUI();beep(110,.18,'sawtooth')}
-function setSteer(dir){targetX=clamp(targetX+dir*.32,-1.55,1.55)}
-$('leftBtn').addEventListener('pointerdown',e=>{e.preventDefault();keys.left=true});$('rightBtn').addEventListener('pointerdown',e=>{e.preventDefault();keys.right=true});['pointerup','pointercancel','pointerleave'].forEach(ev=>{$('leftBtn').addEventListener(ev,()=>keys.left=false);$('rightBtn').addEventListener(ev,()=>keys.right=false)});
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')keys.left=true;if(k==='arrowright'||k==='d')keys.right=true;if(k==='p'){e.preventDefault();if(mode==='play')pause();else if(mode==='pause')resume()}if(k==='m')toggleAudio();if(k===' '){e.preventDefault();phaseShift()}});
-addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')keys.left=false;if(k==='arrowright'||k==='d')keys.right=false});
-let dragging=false;canvas.addEventListener('pointerdown',e=>{dragging=true;setPointerTarget(e)});addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointermove',e=>{if(dragging)setPointerTarget(e)});
-function setPointerTarget(e){const r=canvas.getBoundingClientRect();targetX=clamp(((e.clientX-r.left)/r.width-.5)*3.1,-1.55,1.55)}
-function phaseShift(){if(mode!=='play')return;if(phase<3){phase++;phaseClock=0;if(phase===2){echoRoute=route.map(p=>({...p}));toast('YOUR ECHO HAS ARRIVED');beep(700,.12)}else{toast('MEMORY COLLISION MODE');beep(850,.12)}}else{score+=100;inv=.7;toast('PHASE SHIFT +100');beep(950,.08)}}
-function spawn(type){const lane=[-1.5,-.5,.5,1.5][Math.floor(rand()*4)];objects.push({z:1.18,x:lane,type:type||'traffic',hit:false,phaseSeed:rand()})}
-function spawnMixed(){const r=rand();if(r<.13)spawn('shard');else if(r<.20&&phase>=3)spawn('gate');else spawn('traffic')}
-function recordRoute(dt){routeClock+=dt;if(routeClock>=.045){routeClock=0;route.push({x:carX,d:distance});if(route.length>1200)route.shift()}}
-function roadX(lane,z){const p=1/(1+z*.06);return W/2+lane*W*.205*p}
-function roadY(z){const p=1/(1+z*.06);return H*.31+H*.52*p}
-function update(dt){if(mode!=='play')return;t+=dt;phaseClock+=dt;const steerSpeed=3.8;if(keys.left)targetX-=steerSpeed*dt;if(keys.right)targetX+=steerSpeed*dt;targetX=clamp(targetX,-1.55,1.55);carX+=(targetX-carX)*Math.min(1,dt*12);speed=112+Math.min(105,distance*13)+(phase>1?12:0);distance+=speed/3600*dt;roadScroll+=speed*dt*.035;score+=speed*dt*.14;if(inv>0)inv-=dt;recordRoute(dt);
-if(phase===1&&phaseClock>7){phase=2;phaseClock=0;echoRoute=route.map(p=>({...p}));toast('YOUR ECHO HAS ARRIVED');beep(700,.12)}
-if(phase===2&&phaseClock>12){phase=3;phaseClock=0;toast('THE ROAD REMEMBERS');beep(820,.12)}
-if(phase>=2&&echoRoute.length){echoClock+=dt;if(echoClock>.24){echoClock=0;const progress=(distance*2.5)%1,idx=Math.floor(progress*(echoRoute.length-1)),p=echoRoute[idx];objects.push({z:1.12,x:p.x,type:'echo',hit:false,v:75)}}
-if(rand()<dt*(1.35+phase*.18))spawnMixed();
-for(const o of objects){o.z-=dt*(.42+speed/175);if(o.z<.17&&!o.hit){const dx=Math.abs(o.x-carX);if(o.type==='shard'&&dx<.48){o.hit=true;shards++;score+=250;toast('MEMORY SHARD +250');burst(o.x);beep(980,.08)}else if(o.type==='gate'&&dx<.44){o.hit=true;score+=150;toast('MEMORY GATE +150');beep(760,.07)}else if((o.type==='traffic'||o.type==='echo')&&o.z<.20&&dx<.50){if(inv<=0){inv=.9;score=Math.max(0,score-180);shake=.32;toast(o.type==='echo'?'YOU HIT YOUR PAST':'COLLISION');beep(90,.14,'sawtooth')}o.hit=true}}}
-objects=objects.filter(o=>o.z>-0.18);if(distance>0.15&&distance%1<.004)score+=50;$('phase').textContent=String(phase).padStart(2,'0');$('score').textContent=String(Math.floor(score)).padStart(6,'0');$('dist').textContent=distance.toFixed(1);$('speed').textContent=Math.round(speed)+' km/h';$('echoFill').style.width=Math.min(100,route.length/12)+'%';$('echoText').textContent=phase===1?'MEMORY BUFFER: RECORDING':phase===2?'ECHO: YOUR PAST IS DRIVING':'MEMORY: BREAK YOUR OLD PATTERN'}
-}
-function burst(lane){const x=roadX(lane,.05),y=H*.82;for(let i=0;i<22;i++)particles.push({x,y,vx:(rand()-.5)*150,vy:-rand()*220,life:.8+rand()*.4})}
-function drawBackground(){const horizon=H*.31,sky=ctx.createLinearGradient(0,0,0,horizon);sky.addColorStop(0,'#03040f');sky.addColorStop(1,phase>=2?'#111d42':'#071326');ctx.fillStyle=sky;ctx.fillRect(0,0,W,horizon);ctx.fillStyle='#060a12';ctx.fillRect(0,horizon,W,H-horizon);for(let i=0;i<52;i++){const x=(i*97)%W,bh=10+(i*23)%45;ctx.fillStyle=i%5===0?'#45f4ff55':'#15223c';ctx.fillRect(x,horizon-bh,4,bh);if(i%4===0){ctx.fillStyle='#ffd86b99';ctx.fillRect(x+1,horizon-bh+7,2,2)}}ctx.fillStyle='#101727';ctx.beginPath();ctx.moveTo(W*.5,horizon);ctx.lineTo(W*.96,H);ctx.lineTo(W*.04,H);ctx.closePath();ctx.fill();ctx.strokeStyle='#45f4ff55';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W*.5,horizon);ctx.lineTo(W*.04,H);ctx.moveTo(W*.5,horizon);ctx.lineTo(W*.96,H);ctx.stroke();const cycle=roadScroll%28;for(let z=-cycle;z<170;z+=14){const y=roadY(z),y2=roadY(z+5);for(const lane of [-1,0,1]){const x=roadX(lane,z),x2=roadX(lane,z+5);ctx.fillStyle='rgba(230,245,255,.32)';ctx.beginPath();ctx.moveTo(x-2,y);ctx.lineTo(x+2,y);ctx.lineTo(x2+1,y2);ctx.lineTo(x2-1,y2);ctx.closePath();ctx.fill()}}ctx.strokeStyle='#45f4ff55';ctx.beginPath();ctx.ellipse(W/2,horizon+4,W*.25,10,0,0,Math.PI*2);ctx.stroke()}
-function drawCar(x,y,s,color,ghost=false){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.globalAlpha=ghost?.38:1;ctx.shadowBlur=ghost?25:18;ctx.shadowColor=color;ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-25,-45,50,75,10);ctx.fill();ctx.fillStyle='#071321';ctx.beginPath();ctx.roundRect(-17,-31,34,22,6);ctx.fill();ctx.fillStyle='#dffcff';ctx.fillRect(-19,12,8,5);ctx.fillRect(11,12,8,5);ctx.fillStyle='#03050b';ctx.fillRect(-30,-24,7,19);ctx.fillRect(23,-24,7,19);ctx.fillRect(-30,25,7,16);ctx.fillRect(23,25,7,16);if(ghost){ctx.strokeStyle='#45f4ff';ctx.lineWidth=2;ctx.strokeRect(-31,-51,62,83);ctx.fillStyle='#45f4ff';ctx.fillRect(-4,-50,8,3)}ctx.restore()}
-function drawObject(o){const p=1/(1+o.z*.06),x=roadX(o.x,o.z),y=roadY(o.z),s=.42+p*1.55;if(o.type==='shard'){ctx.save();ctx.translate(x,y-18*s);ctx.rotate(t*4);ctx.fillStyle='#ff4fa3';ctx.shadowBlur=20;ctx.shadowColor='#ff4fa3';ctx.beginPath();ctx.moveTo(0,-12*s);ctx.lineTo(9*s,0);ctx.lineTo(0,12*s);ctx.lineTo(-9*s,0);ctx.closePath();ctx.fill();ctx.restore()}else if(o.type==='gate'){ctx.save();ctx.strokeStyle='#9b5cff';ctx.shadowBlur=20;ctx.shadowColor='#9b5cff';ctx.lineWidth=5*s;ctx.strokeRect(x-30*s,y-78*s,60*s,78*s);ctx.restore()}else drawCar(x,y,s,o.type==='echo'?'#45f4ff':'#d9e1ee',o.type==='echo')}
-function draw(dt){ctx.save();ctx.clearRect(0,0,W,H);if(shake>0){ctx.translate((rand()-.5)*9,(rand()-.5)*9);shake=Math.max(0,shake-dt)}drawBackground();objects.slice().sort((a,b)=>b.z-a.z).forEach(drawObject);if(mode==='play'||mode==='pause'){const bob=Math.sin(t*18)*2.4,glow=inv>0?'#ff4fa3':'#45f4ff';drawCar(roadX(carX,.03),H*.82+bob,1.18,glow,false)}for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=330*dt;p.life-=dt;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle='#45f4ff';ctx.fillRect(p.x,p.y,3,3)}particles=particles.filter(p=>p.life>0);ctx.globalAlpha=1;ctx.restore()}
-function loop(now){const dt=Math.min(.035,Math.max(0,(now-last)/1000));last=now;update(dt);draw(dt);requestAnimationFrame(loop)}
-$('playBtn').onclick=start;$('helpPlayBtn').onclick=start;$('helpBtn').onclick=()=>show('help');$('backBtn').onclick=menu;$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;$('restartBtn').onclick=start;$('pauseMenuBtn').onclick=menu;$('againBtn').onclick=start;$('overMenuBtn').onclick=menu;$('audioBtn').onclick=toggleAudio;document.addEventListener('click',e=>{if(e.target&&e.target.id==='playBtn')start();if(e.target&&e.target.id==='helpPlayBtn')start()});requestAnimationFrame(loop);
-</script>
+<script type="module" src="/src/main.js"></script>
 </body>
 </html>

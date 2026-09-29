@@ -1,0 +1,7 @@
+export class InputManager{
+constructor(ui){this.left=false;this.right=false;this.accel=false;this.brake=false;this.phase=false;this.pause=false;this.steerTouch=0;this.ui=ui;this.bind()}
+bind(){addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','a'].includes(k))this.left=true;if(['arrowright','d'].includes(k))this.right=true;if(['arrowup','w'].includes(k))this.accel=true;if(['arrowdown','s'].includes(k))this.brake=true;if(k===' ')this.phase=true;if(k==='p')this.pause=true});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(['arrowleft','a'].includes(k))this.left=false;if(['arrowright','d'].includes(k))this.right=false;if(['arrowup','w'].includes(k))this.accel=false;if(['arrowdown','s'].includes(k))this.brake=false});
+const bind=(id,prop)=>{const el=this.ui.querySelector(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();this[prop]=true});['pointerup','pointercancel','pointerleave'].forEach(x=>el.addEventListener(x,()=>this[prop]=false))};bind('#touch-left','left');bind('#touch-right','right');bind('#touch-brake','brake');this.ui.querySelector('#touch-phase')?.addEventListener('pointerdown',()=>this.phase=true)}
+consume(name){const v=this[name];this[name]=false;return v}
+steer(){return (this.right?1:0)-(this.left?1:0)}
+}

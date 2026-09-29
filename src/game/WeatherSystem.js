@@ -1,0 +1,7 @@
+import * as THREE from 'three';
+export class WeatherSystem{
+constructor(scene,camera){this.scene=scene;this.camera=camera;this.time=0;this.weather='clear';this.rain=[];this.sun=new THREE.DirectionalLight(0xffffff,2.2);this.sun.position.set(-40,70,20);scene.add(this.sun);scene.add(new THREE.HemisphereLight(0x9bc7ff,0x18220f,1.1));this.fog=new THREE.Fog(0x07101c,45,170);scene.fog=this.fog;this.set('clear')}
+set(kind){this.weather=kind;if(kind==='rain'||kind==='storm'){this.makeRain(kind==='storm'?900:500);this.fog.near=25;this.fog.far=105}else if(kind==='fog'){this.clearRain();this.fog.near=18;this.fog.far=65}else{this.clearRain();this.fog.near=45;this.fog.far=180}}
+makeRain(storm){this.clearRain();const geo=new THREE.BufferGeometry(),pos=new Float32Array((storm?900:500)*3);for(let i=0;i<pos.length;i+=3){pos[i]=(Math.random()-.5)*90;pos[i+1]=Math.random()*45;pos[i+2]=-Math.random()*130}geo.setAttribute('position',new THREE.BufferAttribute(pos,3));const p=new THREE.Points(geo,new THREE.PointsMaterial({color:0x8edcff,size:.08,transparent:true,opacity:.65}));this.scene.add(p);this.rain.push(p)}
+clearRain(){for(const p of this.rain)this.scene.remove(p);this.rain=[]}
+update(dt,gameTime){this.time=gameTime;const cycle=(gameTime%90)/90;const night=cycle>.58&&cycle<.86;this.sun.intensity=night?.32:cycle>.45?1.0:2.2;this.sun.color.setHSL(.58,.35,night?.7:1);if(this.weather==='rain'||this.weather==='storm')for(const p of this.rain){const a=p.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]-=dt*55;if(a[i]<0)a[i]=45}}}}

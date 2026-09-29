@@ -1,373 +1,86 @@
-# 🚗 ROAD ECHO — The Highway Remembers
+# ROAD ECHO — The Highway Remembers
 
-> **A memory-driven arcade racing game where your own past becomes your opponent.**
+A browser-based 3D driving game where your own past becomes the opponent. Every completed run records steering, speed, position and braking. Later runs replay saved routes as translucent Echo vehicles.
 
+## Gameplay
 
----
+Drive → record your route → survive traffic → encounter your past → collect memory events → finish → save the route → race the next memory.
 
-## 🎮 Project Overview
+The game supports up to three saved Echo generations in localStorage. Echo collisions reduce score and trigger audio/visual feedback.
 
-**ROAD ECHO** is a browser-based arcade driving game built around a different gameplay concept:
+## Features
 
-> **Your previous driving decisions become the opponent in your next run.**
+- Three.js/WebGL third-person driving
+- Procedural 3D highway with lanes, shoulders, guardrails, signs, trees, bridges and reusable road segments
+- Physics-inspired acceleration, braking, momentum, steering, grip and vehicle-specific handling
+- Five functional vehicles: Balanced, Speed, Handling, Heavy and Electric
+- Cars with wheels, windows, headlights and brake lights
+- Procedural traffic with cars/SUV-style vehicles and variable speeds
+- Echo route recording/replay with multiple generations
+- Memory shards, memory gates and Phase Shift
+- Day/night cycle, rain, fog and storm conditions
+- Web Audio engine and gameplay feedback
+- Desktop keyboard + mobile touch controls
+- Persistent best score, vehicle, audio preference and Echo routes
+- Vite build for Vercel, Netlify and GitHub Pages
 
-Instead of using a traditional AI opponent, the game records the player's steering path and transforms that history into a glowing **Echo** that replays the player's previous decisions.
+## Tech Stack
 
-This creates a gameplay loop where the player is effectively competing against their own driving history.
+Three.js · WebGL · JavaScript ES modules · Vite · HTML5 · CSS3 · Web Audio API · localStorage
 
-### Core Gameplay Loop
+## Architecture
 
-```text
-Drive
-  ↓
-Record Player Route
-  ↓
-Create Echo
-  ↓
-Drive Against Your Past
-  ↓
-Collect Memory Shards
-  ↓
-Survive Memory Events
-  ↓
-Create a Better Route
-  ↓
-Repeat
-```
+src/main.js boots the application. Game orchestration lives in src/game/Game.js; physics is isolated in src/physics/VehiclePhysics.js; procedural road/world generation is in src/world/World.js; HUD and menus are in src/ui/HUD.js.
 
----
+Key systems: GameState, InputManager, PlayerCar, EchoSystem, TrafficManager, WeatherSystem, CameraController and AudioManager.
 
-## ✨ Key Features
+## Controls
 
-### 🧠 Memory-Based Gameplay
+| Action | Desktop | Mobile |
+|---|---|---|
+| Accelerate | W / ↑ | Automatic |
+| Brake / reverse | S / ↓ | Brake button |
+| Steer | A/D or ←/→ | Left/right |
+| Phase Shift | Space | ◇ |
+| Pause | P | HUD button |
+| Audio | M | HUD button |
 
-* Records the player's steering decisions during a run.
-* Converts the recorded route into an Echo opponent.
-* Echo reproduces the player's previous movement pattern.
-* Each new run can become more challenging because of the player's own history.
+## Run locally
 
-### 🏎️ Arcade Driving
+    npm install
+    npm run dev
 
-* Real-time steering.
-* Progressive speed increase.
-* Procedurally spawned traffic.
-* Collision detection.
-* Distance and score tracking.
-* Progressive gameplay phases.
+Open the Vite URL shown in the terminal.
 
-### 🌌 Memory Events
+## Production build
 
-* **Memory Shards** for bonus points.
-* **Memory Gates** introduced in later phases.
-* **Phase Shift** mechanic.
-* Echo collisions and memory-based events.
+    npm run build
+    npm run preview
 
-### 🎮 Multiple Input Methods
+The production output is dist/.
 
-**Desktop**
+## Deployment
 
-* `A / D`
-* `← / →`
-* `Space` — Phase Shift
-* `P` — Pause
-* `M` — Audio toggle
+- Vercel: import the repository; framework preset Vite; build command npm run build; output directory dist.
+- Netlify: build npm run build; publish dist/.
+- GitHub Pages: the included workflow installs dependencies, builds with the /RoadEcho/ base path and publishes dist/.
 
-**Mobile**
+## Screenshots
 
-* Touch steering buttons.
-* Drag-based steering.
+_Add portfolio screenshots here after capturing desktop and mobile gameplay._
 
-### 💾 Persistent Game Data
+## Technical challenges
 
-The game uses browser `localStorage` to preserve:
+The central challenge is making a replay of a player's past feel like a physical opponent while keeping the route compact and deterministic. Routes are sampled at fixed intervals and interpolated during Echo playback. The world uses reusable road segments and bounded traffic/particle counts instead of generating an unbounded scene.
 
-* Best score
-* Previous driving route
-* Audio preference
+## What I learned
 
-No backend or account is required.
+This project demonstrates modular browser-game architecture, real-time WebGL rendering, delta-time physics, procedural world generation, replay systems, responsive input, audio synthesis and client-side persistence.
 
-### 🔊 Audio Feedback
+## Roadmap
 
-Uses the browser's **Web Audio API** for lightweight gameplay sound effects without external audio libraries.
+Future upgrades can add authored GLB vehicles, richer road materials, stronger lane-changing AI, replay visualization, online leaderboards and more detailed weather/lighting.
 
-### 📱 Responsive Design
+## License
 
-Designed to work across:
-
-* Desktop
-* Laptop
-* Mobile
-* Touch devices
-
----
-
-# 🛠️ Tech Stack
-
-| Technology                 | Purpose                             |
-| -------------------------- | ----------------------------------- |
-| **HTML5**                  | Application structure               |
-| **CSS3**                   | Responsive UI and visual styling    |
-| **JavaScript ES6+**        | Game logic and state management     |
-| **HTML5 Canvas**           | Real-time game rendering            |
-| **Web Audio API**          | Dynamic gameplay sound effects      |
-| **LocalStorage API**       | Persistent player data              |
-| **Git & GitHub**           | Version control and project hosting |
-| **GitHub Pages / Netlify** | Deployment                          |
-
-### Architecture
-
-The project intentionally avoids a heavy game engine and implements the core game systems directly using browser APIs.
-
-```text
-Input
- │
- ├── Keyboard
- ├── Touch
- └── Pointer
-       │
-       ▼
-   Game State
-       │
-       ├── Player Movement
-       ├── Collision System
-       ├── Object Spawning
-       ├── Echo System
-       ├── Score System
-       └── Phase System
-       │
-       ▼
- HTML5 Canvas Renderer
-       │
-       ▼
- Browser
-```
-
----
-
-# 🧠 Technical Highlights
-
-## 1. Echo Replay System
-
-The most important system in ROAD ECHO is the route recorder.
-
-During gameplay, the player's position is periodically stored:
-
-```text
-Player Position
-      ↓
-Route History
-      ↓
-Saved Route
-      ↓
-Echo Replay
-      ↓
-Opponent
-```
-
-The Echo uses the recorded route to reproduce previous player movement.
-
-This creates an opponent without requiring a conventional pathfinding or machine-learning system.
-
----
-
-## 2. Delta-Time Game Loop
-
-The game uses `requestAnimationFrame()` with delta-time based updates.
-
-This keeps movement and gameplay calculations consistent across different frame rates.
-
-```text
-requestAnimationFrame
-        ↓
-Calculate Δ Time
-        ↓
-Update Game State
-        ↓
-Update Objects
-        ↓
-Detect Collisions
-        ↓
-Render Frame
-```
-
----
-
-## 3. Procedural Object Spawning
-
-Traffic, shards and memory gates are generated dynamically during gameplay.
-
-This prevents every run from following an identical obstacle pattern.
-
----
-
-## 4. Collision System
-
-The game continuously checks the player's position against approaching objects.
-
-Different object types produce different outcomes:
-
-```text
-Traffic → Collision penalty
-Echo → Memory collision
-Shard → Bonus score
-Gate → Bonus score
-```
-
----
-
-## 5. Persistent Progress
-
-Browser `localStorage` is used to preserve player-specific data between sessions.
-
-This allows the game to remember:
-
-```text
-Best Score
-Previous Route
-Audio Preference
-```
-
----
-
-# 📂 Project Structure
-
-```text
-RoadEcho/
-│
-├── index.html
-│
-├── README.md
-│
-├── GAME_DESIGN.md
-│
-├── package.json
-│
-└── .gitignore
-```
-
-The current implementation is intentionally lightweight and can run without installing a game engine or external JavaScript framework.
-
----
-
-# 🚀 Running Locally
-
-### Option 1 — Direct Browser
-
-Clone the repository:
-
-```bash
-git clone https://github.com/HarithaKongi/RoadEcho.git
-```
-
-Navigate into the project:
-
-```bash
-cd RoadEcho
-```
-
-Open:
-
-```text
-index.html
-```
-
-in Chrome or Microsoft Edge.
-
----
-
-### Option 2 — VS Code
-
-Open the project in VS Code.
-
-Install the **Live Server** extension.
-
-Then:
-
-```text
-Right Click index.html
-        ↓
-Open with Live Server
-```
-
-The game will open in your browser.
-
----
-
-# 🌐 Deployment
-
-The project is completely frontend-based and can be deployed using:
-
-* GitHub Pages
-* Netlify
-* Vercel
-
-No backend server is required for the current version.
-
----
-
-# 📈 Future Development
-
-ROAD ECHO is designed as a foundation that can be expanded into a larger game.
-
-Planned possibilities include:
-
-* 🌐 Global multiplayer leaderboard
-* 👻 Multiple generations of Echoes
-* 🏆 Daily driving challenges
-* 🗺️ Procedurally generated environments
-* 🌧️ Dynamic weather
-* 🚘 Vehicle customization
-* 🎵 Dynamic music system
-* 🧠 Advanced Echo behavior
-* 📊 Player performance analytics
-* 🔁 Replay import/export
-* 🌐 Online multiplayer modes
-* 🎮 WebGL / Three.js 3D version
-
----
-
-# 🎯 What This Project Demonstrates
-
-This project demonstrates practical experience with:
-
-* Game-loop architecture
-* Real-time rendering
-* JavaScript state management
-* Collision detection
-* Procedural generation
-* User input handling
-* Touch/mobile interaction
-* Browser storage
-* Web Audio API
-* Responsive UI design
-* Performance-conscious animation
-* Git/GitHub workflow
-* Frontend deployment
-
----
-
-# 👨‍💻 Developer
-
-**Haritha Kongi**
-
-B.Tech Computer Science & Engineering student
-
----
-
-## ⭐ Why ROAD ECHO?
-
-Most arcade racing games make the player compete against predefined traffic or AI opponents.
-
-**ROAD ECHO changes the relationship between player and opponent:**
-
-> **The opponent is the player's own history.**
-
-Every run creates the possibility of a different challenge because the road remembers how you drove before.
-
----
-
-## 📄 License
-
-This project is intended as a personal portfolio and learning project.
-
+Personal portfolio / learning project by Haritha Kongi.

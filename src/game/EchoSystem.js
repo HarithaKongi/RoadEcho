@@ -1,0 +1,9 @@
+import * as THREE from 'three';
+export class EchoSystem{
+constructor(scene,banner){this.scene=scene;this.banner=banner;this.routes=[];this.ghosts=[];this.active=false;this.time=0;this.load()}
+count(){return this.routes.length}
+load(){try{this.routes=JSON.parse(localStorage.getItem('roadEchoRoutes')||'[]')}catch{this.routes=[]}}
+save(route){if(route.length<20)return;this.routes.unshift(route.slice(-1800));this.routes=this.routes.slice(0,3);try{localStorage.setItem('roadEchoRoutes',JSON.stringify(this.routes))}catch{}}
+createGhost(route,offset){const g=new THREE.Group();const mat=new THREE.MeshStandardMaterial({color:0x48efff,emissive:0x19dfff,emissiveIntensity:2,transparent:true,opacity:.42,roughness:.2});const b=new THREE.Mesh(new THREE.BoxGeometry(2.08,.6,4.2),mat);b.position.y=.75;g.add(b);const r=new THREE.Mesh(new THREE.TorusGeometry(1.18,.025,8,32),new THREE.MeshBasicMaterial({color:0x48efff,transparent:true,opacity:.7}));r.rotation.x=Math.PI/2;r.position.y=.45;g.add(r);g.userData={route,offset};this.scene.add(g);this.ghosts.push(g)}
+begin(){this.ghosts.forEach(g=>this.scene.remove(g));this.ghosts=[];this.time=0;this.active=this.routes.length>0;this.routes.slice(0,3).forEach((r,i)=>this.createGhost(r,i));if(this.active){this.banner.style.opacity='1';setTimeout(()=>this.banner.style.opacity='0',1400)}}
+update(dt,speed){if(!this.active)return;this.time+=dt;for(const g of this.ghosts){const r=g.userData.route;if(!r.length)continue;const t=(this.time*speed*.004+g.userData.offset*.19)%r[r.length-1].t;let lo=0,hi=r.length-1;while(lo<hi){const m=(lo+hi)>>1;if(r[m].t<t)lo=m+1;else hi=m}const p=r[Math.max(0,lo-1)],n=r[Math.min(r.length-1,lo)];const a=n.t===p.t?0:(t-p.t)/(n.t-p.t);const x=p.x+(n.x-p.x)*a;g.position.x=x*2.15;g.position.z=-(speed*.035*this.time%120)+g.userData.offset*18;g.rotation.y=p.heading||0;g.position.y=.15+Math.sin(this.time*3+g.userData.offset)*.03}}}

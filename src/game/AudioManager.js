@@ -1,0 +1,7 @@
+export class AudioManager{
+constructor(){this.enabled=localStorage.getItem('roadEchoAudio')!=='off';this.ctx=null;this.master=null;this.engine=null}
+init(){if(!this.enabled)return;try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;this.ctx=this.ctx||new A();this.master=this.master||this.ctx.createGain();this.master.gain.value=.045;this.master.connect(this.ctx.destination);if(this.ctx.state==='suspended')this.ctx.resume()}catch{this.enabled=false}}
+beep(f=440,d=.08){if(!this.enabled)return;this.init();if(!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.001,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.16,this.ctx.currentTime+.01);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+d);o.connect(g);g.connect(this.master);o.start();o.stop(this.ctx.currentTime+d+.02)}
+engineSound(speed){if(!this.enabled)return;this.init();if(!this.ctx)return;if(!this.engine){this.engine=this.ctx.createOscillator();this.engine.type='sawtooth';this.engine.frequency.value=70;const g=this.ctx.createGain();g.gain.value=.025;this.engine.connect(g);g.connect(this.master);this.engine.start()}this.engine.frequency.setTargetAtTime(55+speed*1.6,this.ctx.currentTime,.05)}
+toggle(){this.enabled=!this.enabled;localStorage.setItem('roadEchoAudio',this.enabled?'on':'off');if(this.enabled)this.beep(700,.08)}
+}
