@@ -1,0 +1,7 @@
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const MODEL_URL='https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CarConcept/GLB/CarConcept.glb';
+let modelPromise;
+function normalize(root){const box=new THREE.Box3().setFromObject(root),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());const scale=4.5/(Math.max(size.x,size.z)||1);root.scale.setScalar(scale);root.position.set(-center.x*scale,-box.min.y*scale,-center.z*scale);root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material)o.material.envMapIntensity=1.35;}});return root;}
+export function loadCarModel(){if(modelPromise)return modelPromise;modelPromise=new Promise(resolve=>new GLTFLoader().load(MODEL_URL,g=>resolve(normalize(g.scene)),undefined,()=>resolve(null)));return modelPromise;}
+export function fallbackCar(color=0x38d9ff){const g=new THREE.Group(),paint=new THREE.MeshStandardMaterial({color,metalness:.82,roughness:.2}),glass=new THREE.MeshStandardMaterial({color:0x111a25,roughness:.12});const body=new THREE.Mesh(new THREE.BoxGeometry(2,.55,4.2),paint);body.position.y=.72;g.add(body);const cabin=new THREE.Mesh(new THREE.BoxGeometry(1.45,.55,1.85),glass);cabin.position.set(0,1.12,-.2);g.add(cabin);for(const x of[-.96,.96])for(const z of[-1.35,1.35]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.24,20),glass);w.rotation.z=Math.PI/2;w.position.set(x,.42,z);g.add(w);}return g;}
