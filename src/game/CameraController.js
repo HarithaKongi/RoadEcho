@@ -1,3 +1,53 @@
-export class CameraController{
-constructor(camera){this.camera=camera;this.baseFov=65}
-update(dt,car,speed,shake=0){const targetX=car.position.x*.48,targetY=4.2+Math.min(speed/120,1.5),targetZ=9.5;this.camera.position.x+=(targetX-this.camera.position.x)*Math.min(1,dt*4);this.camera.position.y+=(targetY-this.camera.position.y)*Math.min(1,dt*3);this.camera.position.z+=(targetZ-this.camera.position.z)*Math.min(1,dt*3);this.camera.lookAt(car.position.x*.35,1.1,-10);this.camera.fov=this.baseFov+Math.min(10,speed*.025);this.camera.updateProjectionMatrix();if(shake>0){this.camera.position.x+=(Math.random()-.5)*shake;this.camera.position.y+=(Math.random()-.5)*shake}}}
+import * as THREE from 'three';
+
+export class CameraController {
+  constructor(camera) {
+    this.camera = camera;
+    this.baseFov = 67;
+    this.currentMode = 'chase';
+    this.position = new THREE.Vector3(0, 3.6, 8.5);
+    this.look = new THREE.Vector3();
+  }
+
+  setMode(mode) {
+    this.currentMode = mode;
+  }
+
+  update(dt, car, speed, shake = 0) {
+    const speedFactor = Math.min(speed / 220, 1);
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(car.quaternion);
+
+    let target;
+    if (this.currentMode === 'hood') {
+      target = car.position.clone()
+        .add(new THREE.Vector3(0, 1.35, 0))
+        .add(forward.clone().multiplyScalar(1.15));
+    } else if (this.currentMode === 'cockpit') {
+      target = car.position.clone()
+        .add(new THREE.Vector3(0, 1.25, 0))
+        .add(forward.clone().multiplyScalar(0.35));
+    } else {
+      target = car.position.clone()
+        .add(new THREE.Vector3(0, 3.2 + speedFactor * 1.4, 0))
+        .add(forward.clone().multiplyScalar(-8.5 - speedFactor * 2.2));
+    }
+
+    this.position.lerp(target, 1 - Math.pow(0.001, dt));
+    this.camera.position.copy(this.position);
+
+    const lookTarget = car.position.clone()
+      .add(new THREE.Vector3(0, 0.9, 0))
+      .add(forward.clone().multiplyScalar(10 + speedFactor * 8));
+
+    this.look.lerp(lookTarget, 1 - Math.pow(0.002, dt));
+    this.camera.lookAt(this.look);
+
+    this.camera.fov = this.baseFov + speedFactor * 11;
+    this.camera.updateProjectionMatrix();
+
+    if (shake > 0) {
+      this.camera.position.x += (Math.random() - 0.5) * shake;
+      this.camera.position.y += (Math.random() - 0.5) * shake;
+    }
+  }
+}
