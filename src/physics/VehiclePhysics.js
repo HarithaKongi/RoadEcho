@@ -1,35 +1,11 @@
+import * as THREE from 'three';
+import RAPIER from '@dimforge/rapier3d-compat';
+const FIXED_DT=1/120;
 export class VehiclePhysics{
-constructor(spec={}){this.spec=spec;this.reset()}
-reset(){this.x=0;this.vx=0;this.speed=0;this.heading=0;this.steerAngle=0;this.bodyRoll=0;this.bodyPitch=0;this.suspension=0;this.brake=false}
-update(dt,input){
- const steer=input.steer;this.brake=input.brake;
- const max=this.spec.maxSpeed;const throttle=input.accel?1:0;
- const engine=this.spec.accel*(.35+throttle*.65);
- const rolling=this.spec.drag+this.speed*.018;
- if(throttle)this.speed+=engine*dt;
- else this.speed-=rolling*dt;
- if(this.brake)this.speed-=this.spec.brake*dt;
- this.speed=Math.max(0,Math.min(max,this.speed));
- const steerLimit=.58*(1-Math.min(this.speed/max,.85)*.22);
- const targetSteer=steer*steerLimit;
- this.steerAngle+=(targetSteer-this.steerAngle)*Math.min(1,dt*8);
- const wheelBase=2.65;
- const yawRate=(this.speed/3.6)/wheelBase*Math.tan(this.steerAngle)*this.spec.yawGrip;
- this.heading+=yawRate*dt;
- const lateralTarget=Math.sin(this.steerAngle)*this.speed*.0028;
- this.vx+=(lateralTarget-this.vx)*Math.min(1,dt*this.spec.grip);
- this.vx*=Math.pow(.18,dt);
- this.x+=this.vx*dt;
- this.x=Math.max(-1.72,Math.min(1.72,this.x));
- this.bodyRoll+=((-this.steerAngle*this.speed*.0018)-this.bodyRoll)*Math.min(1,dt*7);
- this.bodyPitch+=((this.brake?.06:-this.speed*.00016)-this.bodyPitch)*Math.min(1,dt*8);
- this.suspension=Math.sin(performance.now()*.012)*Math.min(.035,this.speed*.00012);
- return this
-}}
-export const VEHICLES={
-balanced:{name:'BALANCED',maxSpeed:190,accel:52,brake:120,drag:18,grip:5.4,yawGrip:.92,color:0x38d9ff},
-speed:{name:'SPEED',maxSpeed:235,accel:70,brake:110,drag:17,grip:4.4,yawGrip:.88,color:0xff4d75},
-handling:{name:'HANDLING',maxSpeed:180,accel:48,brake:130,drag:18,grip:7.4,yawGrip:1.05,color:0x65ff9a},
-heavy:{name:'HEAVY',maxSpeed:165,accel:42,brake:105,drag:14,grip:4.1,yawGrip:.78,color:0xffb84d},
-electric:{name:'ELECTRIC',maxSpeed:210,accel:88,brake:135,drag:12,grip:5.8,yawGrip:.98,color:0xb57aff}
-}
+constructor(spec={}){this.spec=spec;this.ready=this.initialize();this.accumulator=0;this.resetState()}
+async initialize(){await RAPIER.init();this.world=new RAPIER.World({x:0,y:0,z:0});this.world.timestep=FIXED_DT;const d=RAPIER.RigidBodyDesc.dynamic().setTranslation(0,.75,0).setAdditionalMass(this.spec.mass??1350).setLinearDamping(.08).setAngularDamping(1.8).setCcdEnabled(true).enabledRotations(false,true,false);this.body=this.world.createRigidBody(d);this.world.createCollider(RAPIER.ColliderDesc.cuboid(.98,.42,2.05).setFriction(.95).setRestitution(.04),this.body);this.reset()}
+resetState(){this.x=0;this.z=0;this.speed=0;this.heading=0;this.steerAngle=0;this.bodyRoll=0;this.bodyPitch=0;this.suspension=0;this.brake=false;this.throttle=0;this.readyState=false}
+reset(){this.resetState();if(!this.body)return;this.body.setTranslation({x:0,y:.75,z:0},true);this.body.setRotation({x:0,y:0,z:0,w:1},true);this.body.setLinvel({x:0,y:0,z:0},true);this.body.setAngvel({x:0,y:0,z:0},true);this.readyState=true}
+stepPhysics(input,dt){const b=this.body,s=this.spec,r=b.rotation(),q=new THREE.Quaternion(r.x,r.y,r.z,r.w),f=new THREE.Vector3(0,0,-1).applyQuaternion(q),right=new THREE.Vector3(1,0,0).applyQuaternion(q),v=b.linvel(),vel=new THREE.Vector3(v.x,v.y,v.z),fs=vel.dot(f),ls=vel.dot(right);const target=input.steer*(.58-Math.min(Math.abs(fs)/75,.42));this.steerAngle+=(target-this.steerAngle)*Math.min(1,dt*10);this.throttle+=((input.accel?1:0)-this.throttle)*Math.min(1,dt*7);this.brake=!!input.brake;const kmh=Math.abs(fs)*3.6;if(fs<(s.maxSpeed??58)){const force=(s.engineForce??9200)*this.throttle;b.applyImpulse({x:f.x*force*dt,y:0,z:f.z*force*dt},true)}if(this.brake&&kmh>.5){const force=s.brakeForce??15000;b.applyImpulse({x:-f.x*force*dt,y:0,z:-f.z*force*dt},true)}const grip=(s.lateralGrip??7.5)*(this.brake?1.08:1);b.applyImpulse({x:-right.x*ls*grip*dt,y:0,z:-right.z*ls*grip*dt},true);const authority=THREE.MathUtils.clamp(Math.abs(fs)/18,0,1);b.applyTorqueImpulse({x:0,y:-this.steerAngle*(s.steeringTorque??5200)*authority*dt,z:0},true);const drag=vel.lengthSq()*(s.drag??.42);if(vel.lengthSq()>.01){const d=vel.clone().normalize();b.applyImpulse({x:-d.x*drag*dt,y:0,z:-d.z*drag*dt},true)}this.world.step()}
+update(dt,input){if(!this.body||!this.readyState)return this;this.accumulator+=Math.min(dt,.05);let steps=0;while(this.accumulator>=FIXED_DT&&steps<8){this.stepPhysics(input,FIXED_DT);this.accumulator-=FIXED_DT;steps++}const p=this.body.translation(),r=this.body.rotation(),v=this.body.linvel();this.x=p.x;this.z=p.z;this.speed=Math.sqrt(v.x**2+v.z**2)*3.6;this.heading=Math.atan2(-(2*(r.w*r.y+r.x*r.z)),1-2*(r.y*r.y+r.x*r.x));this.bodyRoll+=((-this.steerAngle*this.speed*.0017)-this.bodyRoll)*Math.min(1,dt*8);this.bodyPitch+=((this.brake?.055:-this.throttle*.022)-this.bodyPitch)*Math.min(1,dt*8);this.suspension=Math.sin(performance.now()*.012)*Math.min(.028,this.speed*.00009);return this}}
+export const VEHICLES={balanced:{name:'APEX GT',maxSpeed:58,mass:1350,engineForce:9200,brakeForce:15000,lateralGrip:7.5,steeringTorque:5200,drag:.42,color:0x38d9ff},speed:{name:'VELOCITY R',maxSpeed:70,mass:1280,engineForce:11200,brakeForce:14500,lateralGrip:6.6,steeringTorque:5000,drag:.39,color:0xff4d75},handling:{name:'CURVE RS',maxSpeed:55,mass:1240,engineForce:8500,brakeForce:16800,lateralGrip:9.2,steeringTorque:5700,drag:.44,color:0x65ff9a},heavy:{name:'IRON V8',maxSpeed:50,mass:1780,engineForce:10200,brakeForce:17000,lateralGrip:5.6,steeringTorque:4200,drag:.48,color:0xffb84d},electric:{name:'EON X',maxSpeed:63,mass:1580,engineForce:12800,brakeForce:19000,lateralGrip:8,steeringTorque:5400,drag:.31,color:0xb57aff}};
